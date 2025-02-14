@@ -4,7 +4,7 @@ A React-based course management system that allows users to browse courses, enro
 
 ## Live Demo
 
-[Course Management System] https://course-management-w1og.vercel.app/
+[Course Management System](https://course-management-w1og.vercel.app/)
 
 ## Features
 
@@ -35,7 +35,7 @@ A React-based course management system that allows users to browse courses, enro
 1. Clone the repository
 
 bash
-git clone https://github.com/yourusername/course-management.git
+git clone https://github.com/sumitbhade/course-management.git
 cd course-management
 
 2. Install dependencies
