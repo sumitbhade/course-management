@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { Link } from "react-router-dom"; // Using Link instead of <a>
 import { fetchCourses } from "../store/slices/courseSlice";
 import {
   selectEnrolledCourses,
@@ -39,24 +40,25 @@ function Dashboard() {
     setCourseToUnenroll(null);
   };
 
+  // Confirmation Modal Component
   const ConfirmationModal = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-sm mx-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg p-4 sm:p-6 max-w-sm w-full mx-auto">
         <h3 className="text-lg font-semibold mb-4">Confirm Unenrollment</h3>
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-600 mb-6 text-sm sm:text-base">
           Are you sure you want to unenroll from this course? This action cannot
           be undone.
         </p>
         <div className="flex justify-end space-x-4">
           <button
             onClick={() => setShowConfirmModal(false)}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+            className="px-4 py-2 text-sm sm:text-base text-gray-600 hover:text-gray-800"
           >
             Cancel
           </button>
           <button
             onClick={confirmUnenroll}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            className="px-4 py-2 text-sm sm:text-base bg-red-600 text-white rounded hover:bg-red-700"
           >
             Unenroll
           </button>
@@ -67,6 +69,8 @@ function Dashboard() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {" "}
+      {/* Added pb-20 for mobile */}
       {showConfirmModal && <ConfirmationModal />}
       <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
@@ -77,7 +81,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Course Progress Overview - Made more responsive */}
+        {/* Course Progress Overview */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
           <div className="bg-blue-50 rounded-lg p-4">
             <h3 className="text-base sm:text-lg font-semibold text-blue-800">
@@ -105,7 +109,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Enrolled Courses Section */}
+        {/* Enrolled Courses */}
         <div className="space-y-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">
             Enrolled Courses
@@ -116,12 +120,12 @@ function Dashboard() {
               <p className="text-gray-500 text-base sm:text-lg">
                 You haven't enrolled in any courses yet.
               </p>
-              <a
-                href="/courses"
+              <Link // Changed from <a> to Link
+                to="/courses" // Changed from href to to
                 className="text-blue-600 hover:text-blue-700 font-medium mt-2 inline-block"
               >
                 Browse Available Courses
-              </a>
+              </Link>
             </div>
           ) : (
             <div className="space-y-4 sm:space-y-6">
