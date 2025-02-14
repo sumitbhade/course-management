@@ -1,6 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { ref, onValue, set } from "firebase/database";
+import { realtimeDb } from "../config/firebase";
 import {
   fetchCourses,
   selectAllCourses,
@@ -19,13 +21,24 @@ function CourseList() {
   const status = useSelector(selectCourseStatus);
   const error = useSelector(selectCourseError);
   const enrolledCourseIds = useSelector(selectEnrolledCourseIds);
+  const [courseLikes, setCourseLikes] = useState({});
+  const [likeInProgress, setLikeInProgress] = useState({});
 
   useEffect(() => {
     dispatch(fetchCourses());
+
+    // Set up real-time listener for likes
+    const likesRef = ref(realtimeDb, "courseLikes");
+    const unsubscribe = onValue(likesRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      setCourseLikes(data);
+    });
+
+    return () => unsubscribe();
   }, [dispatch]);
 
   const handleEnroll = (e, course) => {
-    e.stopPropagation(); // Prevent navigation when clicking enroll
+    e.stopPropagation();
     dispatch(
       enrollInCourse({
         courseId: course.id,
@@ -41,10 +54,34 @@ function CourseList() {
     );
   };
 
+  const handleLike = async (e, courseId) => {
+    e.stopPropagation();
+    if (likeInProgress[courseId]) return;
+
+    setLikeInProgress((prev) => ({ ...prev, [courseId]: true }));
+    try {
+      const currentLikes = courseLikes[courseId] || 0;
+      const newLikes = currentLikes + 1;
+      await set(ref(realtimeDb, `courseLikes/${courseId}`), newLikes);
+    } catch (error) {
+      console.error("Error updating likes:", error);
+    } finally {
+      setLikeInProgress((prev) => ({ ...prev, [courseId]: false }));
+    }
+  };
+
   if (status === "loading") {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-500">Error: {error}</p>
       </div>
     );
   }
@@ -69,9 +106,38 @@ function CourseList() {
                 className="w-full h-48 object-cover"
               />
               <div className="p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                  {course.name}
-                </h2>
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {course.name}
+                  </h2>
+                  <button
+                    onClick={(e) => handleLike(e, course.id)}
+                    disabled={likeInProgress[course.id]}
+                    className="flex items-center space-x-1 text-gray-500 hover:text-red-500 transition-colors"
+                  >
+                    <svg
+                      className={`w-6 h-6 ${
+                        likeInProgress[course.id] ? "animate-pulse" : ""
+                      }`}
+                      fill={
+                        courseLikes[course.id] > 0 ? "currentColor" : "none"
+                      }
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                      />
+                    </svg>
+                    <span className="font-medium">
+                      {courseLikes[course.id] || 0}
+                    </span>
+                  </button>
+                </div>
+
                 <p className="text-gray-600 mb-4">
                   Instructor: {course.instructor}
                 </p>
