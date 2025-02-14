@@ -45,7 +45,6 @@ const courseSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Handle fetchCourses
       .addCase(fetchCourses.pending, (state) => {
         state.status = "loading";
       })
@@ -58,10 +57,8 @@ const courseSlice = createSlice({
         state.status = "failed";
         state.error = action.error.message;
       })
-      // Handle fetchCourseById
       .addCase(fetchCourseById.pending, (state) => {
         state.status = "loading";
-        state.currentCourse = null;
       })
       .addCase(fetchCourseById.fulfilled, (state, action) => {
         state.status = "succeeded";
@@ -71,7 +68,6 @@ const courseSlice = createSlice({
       .addCase(fetchCourseById.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.error.message;
-        state.currentCourse = null;
       });
   },
 });
