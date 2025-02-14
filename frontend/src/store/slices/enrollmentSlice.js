@@ -9,14 +9,13 @@ const enrollmentSlice = createSlice({
   initialState,
   reducers: {
     enrollInCourse: (state, action) => {
-      // Check if already enrolled
       if (
         !state.enrolledCourses.find(
           (course) => course.courseId === action.payload.courseId
         )
       ) {
         state.enrolledCourses.push({
-          id: Date.now(), // Generate a unique ID
+          id: Date.now(),
           ...action.payload,
         });
       }
@@ -33,6 +32,13 @@ const enrollmentSlice = createSlice({
       const course = state.enrolledCourses.find((c) => c.courseId === courseId);
       if (course) {
         course.completed = !course.completed;
+        // Set progress to 100% when marking as complete, restore to previous progress when uncompleting
+        if (course.completed) {
+          course.previousProgress = course.progress; // Store current progress
+          course.progress = 100;
+        } else {
+          course.progress = course.previousProgress || course.progress; // Restore previous progress or keep at 100
+        }
       }
     },
     unenrollFromCourse: (state, action) => {
@@ -43,17 +49,16 @@ const enrollmentSlice = createSlice({
   },
 });
 
-// Selectors
-export const selectEnrolledCourses = (state) =>
-  state.enrollment.enrolledCourses;
-export const selectEnrolledCourseIds = (state) =>
-  state.enrollment.enrolledCourses.map((course) => course.courseId);
-
 export const {
   enrollInCourse,
   updateCourseProgress,
   toggleCourseCompletion,
   unenrollFromCourse,
 } = enrollmentSlice.actions;
+
+export const selectEnrolledCourses = (state) =>
+  state.enrollment.enrolledCourses;
+export const selectEnrolledCourseIds = (state) =>
+  state.enrollment.enrolledCourses.map((course) => course.courseId);
 
 export default enrollmentSlice.reducer;

@@ -1,15 +1,18 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCourses } from "../store/slices/courseSlice";
 import {
   selectEnrolledCourses,
   toggleCourseCompletion,
   updateCourseProgress,
+  unenrollFromCourse,
 } from "../store/slices/enrollmentSlice";
 
 function Dashboard() {
   const dispatch = useDispatch();
   const enrolledCourses = useSelector(selectEnrolledCourses);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [courseToUnenroll, setCourseToUnenroll] = useState(null);
 
   useEffect(() => {
     dispatch(fetchCourses());
@@ -23,8 +26,48 @@ function Dashboard() {
     dispatch(updateCourseProgress({ courseId, progress: newProgress }));
   };
 
+  const handleUnenroll = (courseId) => {
+    setCourseToUnenroll(courseId);
+    setShowConfirmModal(true);
+  };
+
+  const confirmUnenroll = () => {
+    if (courseToUnenroll) {
+      dispatch(unenrollFromCourse(courseToUnenroll));
+    }
+    setShowConfirmModal(false);
+    setCourseToUnenroll(null);
+  };
+
+  const ConfirmationModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-sm mx-4">
+        <h3 className="text-lg font-semibold mb-4">Confirm Unenrollment</h3>
+        <p className="text-gray-600 mb-6">
+          Are you sure you want to unenroll from this course? This action cannot
+          be undone.
+        </p>
+        <div className="flex justify-end space-x-4">
+          <button
+            onClick={() => setShowConfirmModal(false)}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={confirmUnenroll}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Unenroll
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="max-w-6xl mx-auto">
+      {showConfirmModal && <ConfirmationModal />}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800">My Dashboard</h1>
@@ -53,7 +96,7 @@ function Dashboard() {
               Total Hours
             </h3>
             <p className="text-3xl font-bold text-purple-600">
-              {enrolledCourses.length * 16} {/* Assuming 16 hours per course */}
+              {enrolledCourses.length * 16}
             </p>
           </div>
         </div>
@@ -83,7 +126,6 @@ function Dashboard() {
                 className="bg-white border rounded-lg p-6 hover:shadow-md transition-shadow"
               >
                 <div className="flex flex-col md:flex-row gap-6">
-                  {/* Course Thumbnail */}
                   <div className="w-full md:w-48 h-32">
                     <img
                       src={course.thumbnail}
@@ -92,7 +134,6 @@ function Dashboard() {
                     />
                   </div>
 
-                  {/* Course Details */}
                   <div className="flex-1">
                     <div className="flex justify-between items-start mb-2">
                       <div>
@@ -103,19 +144,26 @@ function Dashboard() {
                           Instructor: {course.instructor}
                         </p>
                       </div>
-                      <button
-                        onClick={() => handleMarkComplete(course.courseId)}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                          course.completed
-                            ? "bg-green-100 text-green-800 hover:bg-green-200"
-                            : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                        }`}
-                      >
-                        {course.completed ? "Completed" : "Mark as Complete"}
-                      </button>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleMarkComplete(course.courseId)}
+                          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                            course.completed
+                              ? "bg-green-100 text-green-800 hover:bg-green-200"
+                              : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                          }`}
+                        >
+                          {course.completed ? "Completed" : "Mark as Complete"}
+                        </button>
+                        <button
+                          onClick={() => handleUnenroll(course.courseId)}
+                          className="px-4 py-2 rounded-md text-sm font-medium bg-red-100 text-red-800 hover:bg-red-200 transition-colors"
+                        >
+                          Unenroll
+                        </button>
+                      </div>
                     </div>
 
-                    {/* Progress Bar */}
                     <div className="mt-4">
                       <div className="flex justify-between text-sm text-gray-600 mb-1">
                         <span>Progress</span>
@@ -127,7 +175,6 @@ function Dashboard() {
                           style={{ width: `${course.progress}%` }}
                         />
                       </div>
-                      {/* Progress Controls */}
                       <div className="mt-2 flex gap-2">
                         <button
                           onClick={() =>
@@ -154,7 +201,6 @@ function Dashboard() {
                       </div>
                     </div>
 
-                    {/* Due Date */}
                     <div className="mt-4 flex items-center text-sm text-gray-600">
                       <svg
                         className="w-4 h-4 mr-2"
